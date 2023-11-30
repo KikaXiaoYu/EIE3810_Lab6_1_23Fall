@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "*.m": "matlab",
+        "eie3810_tftlcd.h": "c",
+        "eie3810_key.h": "c",
+        "eie3810_joypad.h": "c",
+        "eie3810_timer.h": "c",
+        "stdlib.h": "c",
+        "stm32f10x.h": "c"
+    }
+}

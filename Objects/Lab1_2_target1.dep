@@ -1,0 +1,9 @@
+Dependencies for Project 'Lab1_2', Target 'target1': (DO NOT MODIFY !)
+CompilerVersion: 5060528::V5.06 update 5 (build 528)::ARMCC
+F (.\Fw_lib\src\stm32f10x_rcc.c)(0x4D783BB4)()
+F (.\Fw_lib\src\stm32f10x_gpio.c)(0x4D79EEC6)()
+F (.\Core\core_cm3.c)(0x4C0C587E)()
+F (.\Core\system_stm32f10x.c)(0x4D783CB0)()
+F (.\Core\startup_stm32f10x_hd.s)(0x4D783CDE)()
+F (.\User\main.c)(0x6503EBCC)()
+F (.\User\stm32f10x_it.c)(0x4D99A59E)()
