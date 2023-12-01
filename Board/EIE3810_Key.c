@@ -37,7 +37,7 @@ void EIE3810_Key2_EXTIInit(void)
     RCC->APB2ENR |= 1 << 6;   // enable the clock of GPIOE
     GPIOE->CRL &= 0xFFFFF0FF; // reset the port 2 to 0b0000
     GPIOE->CRL |= 0x00000800; // set the port 2 to 0b1000, input with pull-up/pull-down
-    GPIOE->ODR = 1 << 2;      // select input pull-up
+    GPIOE->ODR |= 1 << 2;      // select input pull-up
     RCC->APB2ENR |= 0x01;     // enable the clock of AFIO
     /* set external interrupt config register in AFIO for PE2 */
     AFIO->EXTICR[0] &= 0xFFFFF0FF; // reset the EXTI2 to 0b0000
@@ -59,7 +59,7 @@ void EIE3810_Key1_EXTIInit(void)
     RCC->APB2ENR |= 1 << 6;   // enable the clock of GPIOE
     GPIOE->CRL &= 0xFFFF0FFF; // reset the port 3 to 0b0000
     GPIOE->CRL |= 0x00008000; // set the port 3 to 0b1000, input with pull-up/pull-down
-    GPIOE->ODR = 1 << 3;      // select input pull-up
+    GPIOE->ODR |= 1 << 3;      // select input pull-up
     RCC->APB2ENR |= 0x01;     // enable the clock of AFIO
     /* set external interrupt config register in AFIO for PE3 */
     AFIO->EXTICR[0] &= 0xFFFF0FFF; // reset the EXTI3 to 0b0000
@@ -81,7 +81,7 @@ void EIE3810_Key0_EXTIInit(void)
     RCC->APB2ENR |= 1 << 6;   // enable the clock of GPIOE
     GPIOE->CRL &= 0xFFF0FFFF; // reset the port 4 to 0b0000
     GPIOE->CRL |= 0x00080000; // set the port 4 to 0b1000, input with pull-up/pull-down
-    GPIOE->ODR = 1 << 4;      // select input pull-up
+    GPIOE->ODR |= 1 << 4;      // select input pull-up
     RCC->APB2ENR |= 0x01;     // enable the clock of AFIO
     /* set external interrupt config register in AFIO for PE4 */
     AFIO->EXTICR[1] &= 0xFFFFFFF0; // reset the EXTI4 to 0b0000
@@ -103,18 +103,18 @@ void EIE3810_KeyUp_EXTIInit(void)
 {
     /* enable PA0 port */
     RCC->APB2ENR |= 1 << 2;   // enable the clock of GPIOA
-    GPIOE->CRL &= 0xFFFFFFF0; // reset the port 0 to 0b0000
-    GPIOE->CRL |= 0x00000008; // set the port 0 to 0b1000, input with pull-up/pull-down
-    GPIOE->ODR &= 0xFFFFFFFE; // select pull-down
+    GPIOA->CRL &= 0xFFFFFFF0; // reset the port 0 to 0b0000
+    GPIOA->CRL |= 0x00000008; // set the port 0 to 0b1000, input with pull-up/pull-down
+    GPIOA->ODR &= 0xFFFFFFFE; // select pull-down
     RCC->APB2ENR |= 0x01;     // enable the clock of AFIO
     /* set external interrupt config register in AFIO for PA0 */
     AFIO->EXTICR[0] &= 0xFFFFFFF0; // reset the EXTI0 to 0b0000
-    AFIO->EXTICR[0] |= 0x00000000; // set EXTI0 to 0b0000, slect PA[0] pin
+    //AFIO->EXTICR[0] |= 0x00000000; // set EXTI0 to 0b0000, slect PA[0] pin
     /* set interrupt mask register of EXTI0 */
-    EXTI->IMR |= 1; // set MR0 to 0b1, interrupt from Line 0 is not masked
+    EXTI->IMR |= 0x01; // set MR0 to 0b1, interrupt from Line 0 is not masked
     /* set falling trigger selection register of EXTI0 */
     // EXTI->FTSR |= 1; // set TR0 to 0b1, falling trigger enabled for line 0
-    EXTI->RTSR |= 1; // set TR0 to 0b1, rising trigger enabled for line 0
+    EXTI->RTSR |= 0x01; // set TR0 to 0b1, rising trigger enabled for line 0
     /* set interrupt priority register of EXTI2 */
     NVIC->IP[6] = 0x75; // set the priority of EXTI0 to 0b0111_0101
     /* set interrupt set-enable register to enable EXTI2 */

@@ -25,7 +25,7 @@ u8 EIE3810_JOYPAD_Read(void)
     vu8 temp = 0;
     u8 t;
     GPIOB->BSRR |= 1 << 11; // set PB11 output to High
-    Delay(80);              // generate a pulse based on Delay
+    EIE3810_JOYPAD_Delay(80);              // generate a pulse based on Delay
     GPIOB->BSRR |= 1 << 27; // reset PB11 bit to Low
     for (t = 0; t < 8; t++)
     {
@@ -33,16 +33,16 @@ u8 EIE3810_JOYPAD_Read(void)
         if ((((GPIOB->IDR) >> 10) & 0x01) == 0) // if PB10 is Low
             temp |= 0x80;                       // set temp value to 0x80 = 0b10000000
         GPIOD->BSRR |= (1 << 3);                // set PD3 output to High
-        Delay(80);                              // pulse based on Delay
+        EIE3810_JOYPAD_Delay(80);                              // pulse based on Delay
         GPIOD->BSRR |= (1 << 19);               // set PD3 output to Low
-        Delay(80);                              // pulse based on Delay
+        EIE3810_JOYPAD_Delay(80);                              // pulse based on Delay
     }
     return temp;
 }
 
 int EIE3810_JOYPAD_GetIndex(void)
 {
-    u8 PB_10 = JOYPAD_Read();
+    u8 PB_10 = EIE3810_JOYPAD_Read();
     if (PB_10 != 0)
     {
         int num;

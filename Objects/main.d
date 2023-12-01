@@ -28,8 +28,12 @@
 .\objects\main.o: .\Fw_lib\inc\stm32f10x_usart.h
 .\objects\main.o: .\Fw_lib\inc\stm32f10x_wwdg.h
 .\objects\main.o: .\Fw_lib\inc\misc.h
+.\objects\main.o: .\Board\EIE3810_Buzzer.h
 .\objects\main.o: .\Board\EIE3810_Clock.h
+.\objects\main.o: .\Board\EIE3810_JOYPAD.h
 .\objects\main.o: .\Board\EIE3810_Key.h
 .\objects\main.o: .\Board\EIE3810_LED.h
+.\objects\main.o: .\Board\EIE3810_Others.h
 .\objects\main.o: .\Board\EIE3810_TFTLCD.h
+.\objects\main.o: .\Board\EIE3810_Timer.h
 .\objects\main.o: .\Board\EIE3810_USART.h
