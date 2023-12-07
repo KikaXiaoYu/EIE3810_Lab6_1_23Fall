@@ -12,7 +12,7 @@
 #define ORG_FRE 72000000                                          // orginial frequency, will be divided
 #define FIX_ARR 5000                                              // fixed arr for usage
 #define TIM3_FRE 16                                               // frequency for TIM3
-#define TIM4_FRE 32                                               // frequency for TIM4
+#define TIM4_FRE 16                                               // frequency for TIM4
 #define SCREEN_WIDTH 480                                          // screen width
 #define SCREEN_HEIGHT 800                                         // screen height
 #define LOG_HEIGHT 20                                             // the log height

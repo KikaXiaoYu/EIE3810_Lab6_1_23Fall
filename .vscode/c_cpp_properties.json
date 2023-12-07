@@ -3,11 +3,11 @@
         {
             "name": "target1",
             "includePath": [
-                "d:\\1_Current_Materials\\EIE-3810\\Lab 6\\Lab6\\Lab6_1\\Board",
-                "d:\\1_Current_Materials\\EIE-3810\\Lab 6\\Lab6\\Lab6_1\\Core",
-                "d:\\1_Current_Materials\\EIE-3810\\Lab 6\\Lab6\\Lab6_1\\Fw_lib\\inc",
-                "d:\\1_Current_Materials\\EIE-3810\\Lab 6\\Lab6\\Lab6_1\\User",
-                "d:\\1_Current_Materials\\EIE-3810\\Lab 6\\Lab6\\Lab6_1\\Fw_lib\\src"
+                "d:\\1_Current_Materials\\EIE-3810\\Lab 6\\Lab6\\Lab6_2\\Board",
+                "d:\\1_Current_Materials\\EIE-3810\\Lab 6\\Lab6\\Lab6_2\\Core",
+                "d:\\1_Current_Materials\\EIE-3810\\Lab 6\\Lab6\\Lab6_2\\Fw_lib\\inc",
+                "d:\\1_Current_Materials\\EIE-3810\\Lab 6\\Lab6\\Lab6_2\\User",
+                "d:\\1_Current_Materials\\EIE-3810\\Lab 6\\Lab6\\Lab6_2\\Fw_lib\\src"
             ],
             "defines": [
                 "USE_STDPERIPH_DRIVER",
