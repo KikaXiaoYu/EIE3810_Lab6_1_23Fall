@@ -35,6 +35,16 @@
 #define ROUND_Y 480
 #define TIME_X 10
 #define TIME_Y 505
+#define A_SCORE_X 200
+#define A_SCORE_Y (795 - 16)
+#define B_SCORE_X 200
+#define B_SCORE_Y 5
+#define BATTLE_TIME 20
+#define BALL_COLOR BLACK
+
+/* improvement */
+#define CORE_BET_SIZE 120
+#define CORE_RADIUS 10
 
 void TIM3_IRQHandler(void);
 void Ball_Move(void);
@@ -47,6 +57,8 @@ void game_state_PLAYING_init(void);
 void game_state_GAME_OVER_init(void);
 void draw_e_time(u16 color);
 void draw_bounces(u16 color);
+void draw_scores(u16 color);
+void draw_cores();
 void PLAYING_update(void);
 void EXTI4_IRQHandler(void);
 void EXTI3_IRQHandler(void);
@@ -63,7 +75,8 @@ enum game_state // indicating the game state
     PREPARE = 4,    // prepare
     PLAYING = 5,    // playing
     PAUSE = 6,      // pause the game
-    GAME_OVER = 7   // game over
+    GAME_OVER = 7,  // game over
+    BLOCK = 8       // block the game
 } g_game_state = INTRO;
 
 enum game_mode // indicating the game difficulty level
@@ -83,7 +96,7 @@ u32 g_TIM3_local_beat = 0; // to count the time
 u32 g_e_time = 0;   // elapsed time
 u32 g_bounces = 0;  // bounces count
 u32 g_ball_dir = 4; // ball direction (for B reference )
-u32 dirs[8][2] = {
+u32 g_dirs[8][2] = {
     {9, 2},
     {8, 5},
     {5, 8},
@@ -109,6 +122,26 @@ u16 g_ball_Y_pre = EDGE_SIZE + LOG_HEIGHT + BALL_RADIUS;
 u32 g_Player_A_speed = 5;
 u32 g_Player_B_speed = 5;
 u32 g_ball_speed = 2;
+
+u32 g_core_indices[9][2] = {
+    {SCREEN_WIDTH / 2 - CORE_BET_SIZE, SCREEN_HEIGHT / 2 - CORE_BET_SIZE},
+    {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - CORE_BET_SIZE},
+    {SCREEN_WIDTH / 2 + CORE_BET_SIZE, SCREEN_HEIGHT / 2 - CORE_BET_SIZE},
+    {SCREEN_WIDTH / 2 - CORE_BET_SIZE, SCREEN_HEIGHT / 2},
+    {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2},
+    {SCREEN_WIDTH / 2 + CORE_BET_SIZE, SCREEN_HEIGHT / 2},
+    {SCREEN_WIDTH / 2 - CORE_BET_SIZE, SCREEN_HEIGHT / 2 + CORE_BET_SIZE},
+    {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - CORE_BET_SIZE},
+    {SCREEN_WIDTH / 2 + CORE_BET_SIZE, SCREEN_HEIGHT / 2 + CORE_BET_SIZE}};
+
+u32 g_core_type[9] = {
+    1, 0, 1, 0, 1, 0, 1, 0, 1};
+
+u32 g_core_state[9] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+u32 g_Player_A_score = 0;
+u32 g_Player_B_score = 0;
 
 /* main function */
 int main(void)
@@ -194,12 +227,34 @@ void TIM3_IRQHandler(void)
 /* move the ball, do the collision and judge the game state */
 void Ball_Move(void)
 {
-    u32 go_x = dirs[g_ball_dir][0];
-    u32 go_y = dirs[g_ball_dir][1];
+    u32 go_x = g_dirs[g_ball_dir][0];
+    u32 go_y = g_dirs[g_ball_dir][1];
     if (g_game_turn == A)
         go_y = -go_y; // if A, then reverse the vertical direction
     g_ball_X += go_x * g_ball_speed;
     g_ball_Y += go_y * g_ball_speed;
+
+    int i;
+    for (i = 0; i <= 8; i++)
+    {
+        if (((g_ball_X - g_core_indices[i][0]) < BALL_RADIUS || (g_ball_X - g_core_indices[i][0]) > -BALL_RADIUS) && ((g_ball_Y - g_core_indices[i][1]) < BALL_RADIUS || (g_ball_Y - g_core_indices[i][1]) > -BALL_RADIUS) && (g_core_state[i] == 1))
+        {
+            g_core_state[i] == -1;
+            switch (g_core_type[i])
+            {
+            case 1:
+                g_ball_speed += 1;
+                break;
+            case 0:
+                g_ball_speed -= 1;
+                if (g_ball_speed < 2)
+                    g_ball_speed = 2;
+            default:
+                break;
+            }
+            break;
+        }
+    }
 
     if (g_ball_Y <= BALL_RADIUS + UPPER_BOUND)
     {
@@ -211,7 +266,9 @@ void Ball_Move(void)
         }
         else
         {
-            g_game_state = GAME_OVER;
+            g_ball_Y = BALL_RADIUS + UPPER_BOUND;
+            g_game_turn = B;
+            g_Player_A_score += 1;
             return;
         }
     }
@@ -225,7 +282,9 @@ void Ball_Move(void)
         }
         else
         {
-            g_game_state = GAME_OVER;
+            g_ball_Y = LOWER_BOUND - BALL_RADIUS;
+            g_game_turn = A;
+            g_Player_B_score += 1;
             return;
         }
     }
@@ -243,9 +302,9 @@ void Ball_Move(void)
     {
         return;
     }
-    // EIE3810_Toggle_Buzzer();
+    EIE3810_Toggle_Buzzer();
     Delay(100000);
-    // EIE3810_Toggle_Buzzer();
+    EIE3810_Toggle_Buzzer();
 }
 
 /* JOYPAD control */
@@ -396,17 +455,17 @@ void game_state_PLAYING_init(void)
 /* show game over screen */
 void game_state_GAME_OVER_init(void)
 {
-    if (g_game_turn == A)
+    if (g_Player_A_score > g_Player_B_score)
     {
         EIE3810_TFTLCD_ShowString(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 80, "Player B loses the game!", RED, WHITE, 2);
     }
-    else if (g_game_turn == B)
+    else if (g_Player_A_score < g_Player_B_score)
     {
         EIE3810_TFTLCD_ShowString(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 80, "Player A loses the game!", RED, WHITE, 2);
     }
 }
 
-/* draw the elapsed time */
+/* draw the elapsed time and judge time */
 void draw_e_time(u16 color)
 {
     int minutes = g_e_time / 60;
@@ -422,6 +481,27 @@ void draw_e_time(u16 color)
     EIE3810_TFTLCD_ShowChar1608(TIME_X + 18 * 8, TIME_Y, '0' + sec_1st, color, WHITE);
     EIE3810_TFTLCD_ShowChar1608(TIME_X + 19 * 8, TIME_Y, '0' + sec_2nd, color, WHITE);
     EIE3810_TFTLCD_ShowString(TIME_X + 20 * 8, TIME_Y, "s", color, WHITE, 1);
+    if (sec_1st == 3 && sec_2nd == 0)
+    {
+        if (g_Player_A_score > g_Player_B_score)
+        {
+            g_game_state = GAME_OVER;
+        }
+        else if (g_Player_A_score < g_Player_B_score)
+        {
+            g_game_state = GAME_OVER;
+        }
+    }
+    if (sec_2nd == 5)
+    {
+        for (int i = 0; i <= 8; i++)
+        {
+            if (g_core_state[i] == -1)
+                g_core_state[i] = 0;
+            else if (g_core_state[i] == 0)
+                g_core_state[i] = 1;
+        }
+    }
 }
 
 /* draw the bounces time */
@@ -434,6 +514,47 @@ void draw_bounces(u16 color)
     EIE3810_TFTLCD_ShowChar1608(ROUND_X + 11 * 8, ROUND_Y, '0' + boun_2nd, color, WHITE);
 }
 
+/* draw the scores */
+void draw_scores(u16 color)
+{
+    int A_score_1st = g_Player_A_score / 10;
+    int A_score_2nd = g_Player_A_score % 10;
+    EIE3810_TFTLCD_ShowString(A_SCORE_X, A_SCORE_Y, "A Score: ", color, WHITE, 1);
+    EIE3810_TFTLCD_ShowChar1608(A_SCORE_X + 10 * 8, A_SCORE_Y, '0' + A_score_1st, color, WHITE);
+    EIE3810_TFTLCD_ShowChar1608(A_SCORE_X + 11 * 8, A_SCORE_Y, '0' + A_score_2nd, color, WHITE);
+    int B_score_1st = g_Player_B_score / 10;
+    int B_score_2nd = g_Player_B_score % 10;
+    EIE3810_TFTLCD_ShowString(B_SCORE_X, B_SCORE_Y, "B Score: ", color, WHITE, 1);
+    EIE3810_TFTLCD_ShowChar1608(B_SCORE_X + 10 * 8, B_SCORE_Y, '0' + B_score_1st, color, WHITE);
+    EIE3810_TFTLCD_ShowChar1608(B_SCORE_X + 11 * 8, B_SCORE_Y, '0' + B_score_2nd, color, WHITE);
+}
+
+void draw_cores()
+{
+    for (int i = 0; i <= 8; i++)
+    {
+        switch (g_core_state[i])
+        {
+        case 1:
+            switch (g_core_type[i])
+            {
+            case 1:
+                EIE3810_TFTLCD_DrawRectangle(g_core_indices[i][0] - CORE_RADIUS, CORE_RADIUS * 2, g_core_indices[i][1] - CORE_RADIUS, CORE_RADIUS * 2, RED);
+                break;
+            case 0:
+                EIE3810_TFTLCD_DrawRectangle(g_core_indices[i][0] - CORE_RADIUS, CORE_RADIUS * 2, g_core_indices[i][1] - CORE_RADIUS, CORE_RADIUS * 2, BLUE);
+                break;
+            default:
+                break;
+            }
+            break;
+        default:
+            EIE3810_TFTLCD_DrawRectangle(g_core_indices[i][0] - CORE_RADIUS, CORE_RADIUS * 2, g_core_indices[i][1] - CORE_RADIUS, CORE_RADIUS * 2, WHITE);
+            break;
+        }
+    }
+}
+
 /* update the screen when playing */
 void PLAYING_update(void)
 {
@@ -441,7 +562,7 @@ void PLAYING_update(void)
     // EIE3810_TFTLCD_DrawCircle(g_ball_X_pre, g_ball_Y_pre, BALL_RADIUS, 1, WHITE);
     EIE3810_TFTLCD_DrawRectangle(g_ball_X_pre - 1.5 * BALL_RADIUS, BALL_RADIUS * 3, g_ball_Y_pre - 1.5 * BALL_RADIUS, BALL_RADIUS * 3, WHITE);
     /* local update */
-    EIE3810_TFTLCD_DrawCircle(g_ball_X, g_ball_Y, BALL_RADIUS, 1, RED);
+    EIE3810_TFTLCD_DrawCircle(g_ball_X, g_ball_Y, BALL_RADIUS, 1, BALL_COLOR);
 
     /* A */
     EIE3810_TFTLCD_DrawRectangle(0, g_Player_A_X - LOG_WIDTH / 2, PLAYER_A_Y - LOG_HEIGHT / 2, LOG_HEIGHT, WHITE);
@@ -457,6 +578,8 @@ void PLAYING_update(void)
     // EIE3810_TFTLCD_DrawRectangle(0, SCREEN_WIDTH, PLAYER_B_Y + LOG_HEIGHT / 2, 1, BLACK);
     draw_e_time(BLACK);
     draw_bounces(BLACK);
+    draw_cores();
+    draw_scores(BLACK);
 }
 
 /* KEY0, step the state and move right */
