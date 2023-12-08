@@ -12,7 +12,7 @@
 #define ORG_FRE 72000000                                          // orginial frequency, will be divided
 #define FIX_ARR 5000                                              // fixed arr for usage
 #define TIM3_FRE 16                                               // frequency for TIM3
-#define TIM4_FRE 32                                               // frequency for TIM4
+#define TIM4_FRE 16                                               // frequency for TIM4
 #define SCREEN_WIDTH 480                                          // screen width
 #define SCREEN_HEIGHT 800                                         // screen height
 #define LOG_HEIGHT 20                                             // the log height
@@ -97,18 +97,18 @@ u32 dirs[8][2] = {
 u16 g_Player_A_X = SCREEN_WIDTH / 2;
 u16 g_Player_B_X = SCREEN_WIDTH / 2;
 u16 g_ball_X = SCREEN_WIDTH / 2;
-u16 g_ball_Y = EDGE_SIZE + LOG_HEIGHT + BALL_RADIUS;
+u16 g_ball_Y = EDGE_SIZE + LOG_HEIGHT + BALL_RADIUS + 10;
 
 /* indices record */
 u16 g_Player_A_X_pre = SCREEN_WIDTH / 2;
 u16 g_Player_B_X_pre = SCREEN_WIDTH / 2;
 u16 g_ball_X_pre = SCREEN_WIDTH / 2;
-u16 g_ball_Y_pre = EDGE_SIZE + LOG_HEIGHT + BALL_RADIUS;
+u16 g_ball_Y_pre = EDGE_SIZE + LOG_HEIGHT + BALL_RADIUS + 10;
 
 /* further option */
-u32 g_Player_A_speed = 5;
-u32 g_Player_B_speed = 5;
-u32 g_ball_speed = 2;
+u32 g_Player_A_speed = 10;
+u32 g_Player_B_speed = 10;
+u32 g_ball_speed = 1;
 
 /* main function */
 int main(void)
@@ -127,6 +127,9 @@ int main(void)
     EIE3810_NVIC_SetPriorityGroup(5);                                   // priority group
     Delay(1000000);                                                     // 1s
 
+		while(1)
+		{
+			
     g_game_state = INTRO;    // introduction state
     game_state_INTRO_init(); // init introduction screen
 
@@ -142,7 +145,7 @@ int main(void)
 
     while (g_game_state == USART) // wait until not USART
         ;
-    Delay(2000000);
+    Delay(10000000);
     game_state_COUNT_DOWN(); // count down
 
     while (g_game_state == COUNT_DOWN) // wait until count down finish
@@ -154,8 +157,8 @@ int main(void)
         ;
     Delay(1000000);
     game_state_GAME_OVER_init(); // init game over screen
-    while (1)
-        ;
+		Delay(30000000);
+	}
 }
 
 /* TIM3 interrupt handler
@@ -203,7 +206,7 @@ void Ball_Move(void)
 
     if (g_ball_Y <= BALL_RADIUS + UPPER_BOUND)
     {
-        if (((g_ball_X - g_Player_B_X) < (LOG_WIDTH / 2)) || ((g_ball_X - g_Player_B_X) > (-LOG_WIDTH / 2)))
+        if (((g_ball_X - g_Player_B_X) < (LOG_WIDTH / 2)) && ((g_ball_X - g_Player_B_X) > (-LOG_WIDTH / 2)))
         {
             g_ball_Y = BALL_RADIUS + UPPER_BOUND;
             g_game_turn = B;
@@ -217,7 +220,7 @@ void Ball_Move(void)
     }
     else if (g_ball_Y >= LOWER_BOUND - BALL_RADIUS)
     {
-        if (((g_ball_X - g_Player_A_X) < (LOG_WIDTH / 2)) || ((g_ball_X - g_Player_A_X) > (-LOG_WIDTH / 2)))
+        if (((g_ball_X - g_Player_A_X) < (LOG_WIDTH / 2)) && ((g_ball_X - g_Player_A_X) > (-LOG_WIDTH / 2)))
         {
             g_ball_Y = LOWER_BOUND - BALL_RADIUS;
             g_game_turn = A;
@@ -243,9 +246,9 @@ void Ball_Move(void)
     {
         return;
     }
-    // EIE3810_Toggle_Buzzer();
+    EIE3810_Toggle_Buzzer();
     Delay(100000);
-    // EIE3810_Toggle_Buzzer();
+    EIE3810_Toggle_Buzzer();
 }
 
 /* JOYPAD control */
@@ -396,14 +399,17 @@ void game_state_PLAYING_init(void)
 /* show game over screen */
 void game_state_GAME_OVER_init(void)
 {
+
+		EIE3810_TFTLCD_Clear(WHITE);
     if (g_game_turn == A)
     {
-        EIE3810_TFTLCD_ShowString(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 80, "Player B loses the game!", RED, WHITE, 2);
+        EIE3810_TFTLCD_ShowString(SCREEN_WIDTH / 2- 120, SCREEN_HEIGHT / 2 - 80, "Player B loses the game!", RED, WHITE, 2);
     }
     else if (g_game_turn == B)
     {
-        EIE3810_TFTLCD_ShowString(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 80, "Player A loses the game!", RED, WHITE, 2);
+        EIE3810_TFTLCD_ShowString(SCREEN_WIDTH / 2 - 120, SCREEN_HEIGHT / 2 - 80, "Player A loses the game!", RED, WHITE, 2);
     }
+	
 }
 
 /* draw the elapsed time */
@@ -416,12 +422,12 @@ void draw_e_time(u16 color)
     int sec_1st = seconds / 10;
     int sec_2nd = seconds % 10;
     EIE3810_TFTLCD_ShowString(TIME_X, TIME_Y, "Elapsed Time: ", color, WHITE, 1);
-    EIE3810_TFTLCD_ShowChar1608(TIME_X + 15 * 8, TIME_Y, '0' + min_1st, color, WHITE);
-    EIE3810_TFTLCD_ShowChar1608(TIME_X + 16 * 8, TIME_Y, '0' + min_2nd, color, WHITE);
-    EIE3810_TFTLCD_ShowString(TIME_X + 17 * 8, TIME_Y, "m", color, WHITE, 1);
-    EIE3810_TFTLCD_ShowChar1608(TIME_X + 18 * 8, TIME_Y, '0' + sec_1st, color, WHITE);
-    EIE3810_TFTLCD_ShowChar1608(TIME_X + 19 * 8, TIME_Y, '0' + sec_2nd, color, WHITE);
-    EIE3810_TFTLCD_ShowString(TIME_X + 20 * 8, TIME_Y, "s", color, WHITE, 1);
+    EIE3810_TFTLCD_ShowChar1608(TIME_X + 14 * 8, TIME_Y, '0' + min_1st, color, WHITE);
+    EIE3810_TFTLCD_ShowChar1608(TIME_X + 15 * 8, TIME_Y, '0' + min_2nd, color, WHITE);
+    EIE3810_TFTLCD_ShowString(TIME_X + 16 * 8, TIME_Y, "m", color, WHITE, 1);
+    EIE3810_TFTLCD_ShowChar1608(TIME_X + 17 * 8, TIME_Y, '0' + sec_1st, color, WHITE);
+    EIE3810_TFTLCD_ShowChar1608(TIME_X + 18 * 8, TIME_Y, '0' + sec_2nd, color, WHITE);
+    EIE3810_TFTLCD_ShowString(TIME_X + 19 * 8, TIME_Y, "s", color, WHITE, 1);
 }
 
 /* draw the bounces time */
@@ -430,8 +436,8 @@ void draw_bounces(u16 color)
     int boun_1st = g_bounces / 10;
     int boun_2nd = g_bounces % 10;
     EIE3810_TFTLCD_ShowString(ROUND_X, ROUND_Y, "Bounces: ", color, WHITE, 1);
-    EIE3810_TFTLCD_ShowChar1608(ROUND_X + 10 * 8, ROUND_Y, '0' + boun_1st, color, WHITE);
-    EIE3810_TFTLCD_ShowChar1608(ROUND_X + 11 * 8, ROUND_Y, '0' + boun_2nd, color, WHITE);
+    EIE3810_TFTLCD_ShowChar1608(ROUND_X + 9 * 8, ROUND_Y, '0' + boun_1st, color, WHITE);
+    EIE3810_TFTLCD_ShowChar1608(ROUND_X + 10 * 8, ROUND_Y, '0' + boun_2nd, color, WHITE);
 }
 
 /* update the screen when playing */
@@ -505,7 +511,7 @@ void EXTI2_IRQHandler(void)
     // if (g_game_state == PLAYING)
     // {
     // }
-    // EXTI->PR = 1 << 2; // Clear the pending status of EXTI2
+    EXTI->PR = 1 << 2; // Clear the pending status of EXTI2
 }
 
 /* Key_Up, select the easy mode */
@@ -535,7 +541,7 @@ void USART1_IRQHandler(void)
             num = USART1->DR; // Read the received data character
 
             EIE3810_TFTLCD_ShowString(USART_X + 40, USART_Y + 40, "The random number received is: ", WHITE, RED, 1);
-            EIE3810_TFTLCD_ShowChar1608(USART_X + 40 + 32 * 8, USART_Y + 40, num + '0', WHITE, RED);
+            EIE3810_TFTLCD_ShowChar1608(USART_X + 40 + 31 * 8, USART_Y + 40, num + '0', WHITE, RED);
             g_game_state = COUNT_DOWN;
             Delay(1000000);
         }
